@@ -182,37 +182,55 @@ so removing the size proxy left them where they were.
 
 **Selection rationale**
 
-*1. Fit to my interests and the time available.* I picked #69, the output parser
-crashing on a top-level JSON array. I have built REST APIs in Python and what I
-actually want out of this course is practice at the fix-plus-test-plus-review
-loop, not at fighting an environment. #69 is pure Python logic in
-`rag/generator/output_parser.py` with no database, no Redis, and no Docker in the
-way, and it already ships a test marked `xfail` that my fix should un-mark. That
-means the "did I fix it?" question has an objective answer I can run locally in
-seconds, which is the right shape for the time I have this unit. I also liked that
-it sits in the RAG side of the codebase, which is the part I know least and most
-want to read.
+*1. Fit to my interests and the time available.*
+
+I picked #69, the output parser crashing on a top-level JSON array, because it is
+closer to the kind of work I have already done. I have used Python with SQL in
+coursework, personal projects, and at an internship at Dell where Python and SQL
+automated processes behind a shipment tracking system, so figuring out how
+information is being processed and where it breaks is familiar to me. The API
+issue (#62) was interesting too, but I think I will learn more from a parsing and
+retrieval bug than from fixing an API setting.
+
+The time side mattered as well. I have a few hours a week for this alongside
+classes and work, so I needed something I could actually finish in that. #69 is
+pure Python in `rag/generator/output_parser.py` with no database, no Redis, and no
+Docker to set up first, and the repo already has a test for it marked `xfail`.
+That means I can run one test to know whether I am done, instead of spending my
+few hours getting an environment working.
 
 *2. What the verdict identified correctly, and what I weighed that the rubric could
-not.* The rubric was right that all three candidates were live, unclaimed, and
-bounded — and it was right to notice that #54 already has a classmate's claim
-comment on it while #69 has none, even though the Path Review house rule means
-that does not block me. What the rubric could not weigh is the thing that decided
-it: #69's failing test already exists. My rubric has no check for "is there an
-existing test that will tell me when I am done," and that was the single most
-important property for a first contribution where I am still learning the review
-loop. The rubric also ranked #62 second on my API background, which is a fair read
-of my fit profile, but #62 is a one-line attribute rename — I would learn less from
-it even though it is closer to what I already know. Fit-to-background and
-fit-to-learning are not the same thing, and the rubric only sees the first.
+not.*
 
-*3. The anticipated difficulty in claiming it.* Low, with one caveat. #69 has no
-assignee, no linked PR, and zero comments, so nobody is visibly on it, and the
-Path Review house rule means a classmate arriving later does not cost me anything
-— credit attaches to the pull request I open. The caveat is that it is labelled
-`good first issue` and `tier-1` in a classroom repo where twenty-odd people are
-picking at the same time, so I should expect company. The real difficulty is not
-claiming it but writing the claim comment well, which is Unit 2's work.
+The rubric got the basics right: all three candidates are in a live repo, none of
+them is assigned or has an open PR against it, and each is one bounded change. It
+also caught that #54 already has a classmate's claim comment on it while #69 has
+none, even though the Path Review house rule means that would not have stopped me.
+
+What it could not weigh is how much support the issue itself gives me. I would
+rather not work on something where I am expected to figure everything out alone,
+and #69 comes with an existing failing test, the exact file paths, and a clear
+description of what goes wrong. My rubric has no check for that — it asks whether
+an issue is settled and bounded, not whether it hands the contributor a way to
+tell they have fixed it. The rubric also ranked #62 second because it matches my
+API background, which is a fair read, but matching what I already know is not the
+same as helping me learn, and the rubric only sees the first one. What I want out
+of this term is practice reading and debugging code I did not write, and #69 gives
+me more of that.
+
+*3. The anticipated difficulty in claiming it.*
+
+I think claiming it will be straightforward. #69 has no assignee, no linked PR,
+and no comments, so nobody is visibly working on it, and the house rule means a
+classmate claiming it later does not cost me anything, since credit comes from the
+pull request I open.
+
+I am a little worried someone takes it first, since it is labelled `good first
+issue` and `tier-1` in a repo where the whole class is picking at the same time.
+But I am not worried enough to rush. I would rather understand the issue and pick
+one that actually fits me than claim something quickly, and if someone does take
+it, #62 and #54 both passed my rubric and would give me a similar learning
+experience.
 
 ---
 

@@ -36,12 +36,20 @@ you want to avoid. The skill uses this only to RANK the issues your
 rubric accepts, never to change a verdict: fit cannot rescue an issue
 your rubric rejects, and cannot sink one it accepts. -->
 
-I have built web backends and REST APIs in Python, mostly with FastAPI and
-Flask, and I am comfortable with SQLAlchemy, pytest, and Git. I can read an
-unfamiliar codebase and work out where a bug lives, but I have not
-contributed to open source before, so I want an issue with a concrete
-reproduction and a small, reviewable diff rather than an open-ended feature.
-What I most want to practise is writing a test alongside a fix and then
-handling code review on it. I would rather avoid frontend and CSS work, and
-anything that needs a heavyweight local stack (GPUs, or Docker Compose with
-many services) before I can reproduce the bug at all.
+I have used Python in coursework, personal projects, and internships —
+smaller projects involving games and activities, AI and data coursework, and
+an internship at Dell where Python and SQL were used to automate processes
+behind a shipment tracking system. I am comfortable with Python and SQL and
+with tracing how information moves through a system and where it breaks.
+
+What I want out of this term is experience on a codebase I did not write:
+debugging, reading other people's code, and working out how the parts of a
+project fit together, on a real open-source project rather than an assignment
+where I already understand the whole thing.
+
+I do not mind front-end or design work. What I would rather avoid is an issue
+that expects me to work everything out alone with no guidance — I want to
+actually understand what I am doing, so rank an issue higher when it comes
+with a concrete reproduction, named files, an existing failing test, or a
+maintainer who answers questions. I have a few hours a week for this
+alongside classes and work, so prefer issues I can finish in that.
