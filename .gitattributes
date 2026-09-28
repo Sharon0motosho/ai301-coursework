@@ -1,0 +1,5 @@
+# Keep LF on checkout everywhere. eval-run.txt records a sha256 of the
+# rubric.md and SKILL.md that produced the run; CRLF conversion on a
+# Windows checkout would change those bytes and break the fingerprint.
+*.md text eol=lf
+*.txt text eol=lf
