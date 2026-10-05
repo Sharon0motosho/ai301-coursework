@@ -23,15 +23,13 @@ Sharon0motosho
 
 **Claim comment**
 
-<!-- TODO: replace with the comment's permalink once posted, then make sure the text below matches what was posted. -->
-[claim comment permalink — not yet posted]
+https://github.com/codepath/pathreview-ai301-fa26-howard/issues/69#issuecomment-5998711268
 
 > Hi, I'd like to work on this as my first contribution here. Running the xfail test in `tests/unit/test_output_parser.py` (`test_json_array_fallback`) with `--runxfail` on current `main` gives me the same `AttributeError: 'list' object has no attribute 'items'` from `_parse_json_output` in `rag/generator/output_parser.py`. I'll post the full repro below. My next step is working out what an array response should turn into (one section per item, or falling through to the plaintext parser) and I'll report back here before opening a PR.
 
 **Reproduction comment**
 
-<!-- TODO: replace with the comment's permalink once posted, then make sure the text below matches what was posted. -->
-[reproduction comment permalink — not yet posted]
+https://github.com/codepath/pathreview-ai301-fa26-howard/issues/69#issuecomment-5998719854
 
 **Reproduction: reproduced on current `main`**
 
@@ -93,78 +91,53 @@ fields.
 
 **Run history**
 
-Three runs, in order:
+The smoke run came first because I wanted to make sure the evaluation was working before
+running everything. The second run crashed, so it did not give a usable result. The final
+run completed successfully and scored 20/20, which matches eval-run.txt.
 
-1. `--only calib-01,calib-03,calib-04,pkg-20,pkg-03,pkg-09 --include-calibration`: **3/3**
-   scored items (all 3 calibration packages agreed too, so 6/6 overall). This was a smoke
-   run to check the harness wiring. I also used it to test the check I was least sure of,
-   `ai-disclosure-when-required`, against the disclosure-wall package (pkg-20) and the two
-   packages whose AI policies look strict but ask no disclosure of comments (pkg-03, pkg-09).
-2. Full run with `--save-run eval-run.txt`: **no score**. The harness crashed before
-   grading anything: `UnicodeEncodeError: 'charmap' codec can't encode character
-   '\U0001f64f'`. On Windows, Python was writing the prompt to `claude` in cp1252, and one
-   package contains an emoji. No file was written.
-3. The same full run again with `PYTHONUTF8=1` set and the rubric unchanged: **20/20**. This
-   is the committed run: `agreement: 20/20 scored items  (bar: 18/20: PASS)`, with
-   `categories: clear-accept 8/8  disclosure 1/1  no-evidence 4/4  unfollowable-comms 3/3  wrong-target 4/4`.
+The three runs, in order, were:
+
+1. Smoke run (`--only` on 6 packages, 3 of them scored): **3/3**.
+2. Full run: **no score**. It crashed with `UnicodeEncodeError` before grading anything,
+   so no file was written.
+3. Full run with `--save-run eval-run.txt`: **20/20**, matching
+   `agreement: 20/20 scored items  (bar: 18/20: PASS)` in eval-run.txt.
 
 **Package analysis**
 
-`pkg-16` (pandas-dev/pandas#66656, `rename_axis` with a tuple name).
+The package was pkg-16. My rubric verdict is reject, and the gold label is also reject.
 
-- My rubric decided: **reject**.
-- Gold label: **reject**. The note says the report "tested pandas 1.5.3 against an issue
-  confirmed on latest and main, without acknowledging the deviation; the shown ValueError
-  is that old version's behavior, not evidence about the reported bug."
+The check that caught the problem was target-matches-issue. The report tested pandas 1.5.3,
+but the issue is confirmed on the latest version. The report also never mentions that it was
+using an older version, so it does not show that the issue still happens on the current
+version. The run's evidence for that check: "Report used pandas 1.5.3 while issue is
+confirmed on 'latest version and main branch' and thread confirms on 2.3.3/current main,
+with no acknowledgment of the version gap."
 
-The only required check that failed was `target-matches-issue`. Its evidence line from the
-run: "Report used pandas 1.5.3 while issue is confirmed on 'latest version and main branch'
-and thread confirms on 2.3.3/current main, with no acknowledgment of the version gap."
-
-The interesting part is what passed. `artifact-shows-issue-behavior` passed ("Traceback
-shows `ValueError: Length of new names must be 1, got 3` using the issue's own trigger"),
-and so did `claims-backed-by-evidence`. The report used the issue's exact code, and a
-`ValueError` from `rename_axis` looks like the crash the issue describes. My artifact check
-only compares the input against the issue's trigger and the output against its symptom, and
-both matched. It has no idea that the same symptom on a two-year-old release says nothing
-about today's bug. That is why the version question is its own check. If I had folded it
-into "environment recorded", this package would have passed, because it does record its
-environment, completely. The problem is that it records the wrong one and never says so.
-It agrees with the gold label for the right reason, but only one check is holding it.
+The "output shows the bug" check still passed because the traceback does look like the bug
+described in the issue. However, getting the same type of error on an old version does not
+prove that the bug still exists in the latest version. That is why the version check is
+important as a separate check.
 
 **Check rationale**
 
-`ai-disclosure-when-required`, quoted from the `rubric.md` uploaded to `tools/repro-check/`:
-
 > First decide what the policy requires of issue comments. If the policy requires disclosing AI use in comments or issues, or requires disclosing "all AI usage in any form", pass only when the claim or the report discloses AI assistance (the tool or the fact of assistance, and its extent). If the policy has no AI rule, only regulates code or pull requests, or only asks that comments be in the contributor's own words, pass: no disclosure is required there, and a comment that reads as the contributor's own words meets an own-words rule. Fail only when a disclosure requirement that covers comments exists and neither comment discloses.
 
-Before the first run I read every package's repo-facts line. The first version I considered
-was "if the repo has an AI policy, the comments must disclose AI use". I rejected it because
-six of the twenty repos have an AI policy and they ask for very different things. ripgrep
-(pkg-03) wants comments "written by humans in their own words", which is a rule about voice,
-not about disclosure. fd (pkg-09) wants the tool named "in the pull request" and says "the
-policy states no disclosure ask for issue comments". Both are gold accepts, and the simpler
-check would have rejected both. So the check starts with "First decide what the policy
-requires of issue comments" and names each shape that asks nothing of a comment. That way
-the grader has to read the policy and cannot react to the word "AI". The package set is
-treated as AI-assisted ("course packages are treated as AI-assisted work"), so the check
-tells the grader to assume that. Otherwise ghostty's "all AI usage in any form must be
-disclosed" could be dodged by guessing that no AI was used.
+I did not use the simpler rule, "any AI policy means the comments must disclose", because
+that would have been too broad. It would have incorrectly failed pkg-03, where ripgrep only
+requires comments to be in your own words, and pkg-09, where fd only requires disclosure in
+pull requests. The check needs to look at what the specific repository's AI policy actually
+requires.
 
 **Trade-offs**
 
-The own-words clause gives something up. Under this check, a comment in a repo like
-ripgrep's passes as long as it *reads* like the contributor's own words, and a grader can't
-tell from the text whether a person actually wrote it. An AI-drafted comment that sounds
-human would pass. I accept that miss, because the only other choice is failing every
-comment in an own-words repo, and that would reject pkg-03, a gold accept.
+The main limitation is that an AI-written comment that sounds like a normal human-written
+comment could still pass, especially in a repo like ripgrep. I am okay with that limitation
+because making the check stricter could incorrectly flag packages that should pass.
 
-I checked that this check didn't cost anything elsewhere before the full run: the smoke run
-put pkg-03 and pkg-09 in as canaries next to pkg-20. pkg-20 rejected (ghostty's policy
-covers comments, and neither comment discloses), and pkg-03 and pkg-09 accepted. The
-confirming full run had disclosure 1/1 and clear-accept 8/8, and pkg-05 (conda's
-"permissive-with-responsibility" policy), pkg-07 (p5.js, where the comment does
-disclose), and pkg-12 (prettier's policy on AI code quality) also accepted. No package that should pass was held by this check.
+The smoke run used pkg-03 and pkg-09 as canaries, and the full run scored clear-accept 8/8.
+Also, every package with an AI policy got the correct result, so the check did not appear to
+cause problems with the other packages.
 
 ---
 
