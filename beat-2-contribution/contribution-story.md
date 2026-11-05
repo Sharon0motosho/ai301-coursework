@@ -55,10 +55,9 @@ happened; these entries are the toolkit's own timeline.
 All four entries are graded. Keep every heading below, and fill each
 one in the week it belongs to.
 
-**Unit 5: [one line on the tool work]**
+**Unit 9: Building and improving my issue scouting tool**
 
-[2-4 sentences: what you built (the scout, your strategy), what broke
-or fell short, what changed because of it.]
+I built a fit profile, created search queries, and worked on ranking rules to help find open-source issues that match my skills and interests. My first scan accepted 0 out of 5 issues because my ranking rules prioritized issues with comments, which often meant they had already been claimed. I changed the ranking to prioritize issues with no comments, checked for claims before selecting issues, and expanded the response sample to 100 issues. After reviewing 38 issues, I also noticed that Python issues tagged as good first issues tend to get claimed within a few days, but the website does not always show those claims.
 
 **Unit 6: [one line on the tool work]**
 
