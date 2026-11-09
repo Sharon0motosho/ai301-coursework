@@ -214,17 +214,28 @@ What I haven't verified: I've only built the docs on Windows 11 with Python 3.14
 
 ## Testing Strategy
 
-[What observable checks prove the fix: your reproduction steps re-run
-against the built change (before and after), and the repo's own test
-suite or checks with the outcome shown. "Tests pass" with nothing
-observable named is not a strategy.]
+The fix only changes documentation, and the repo has no tests for the docs, so the decisive check is my reproduction re-run on the built HTML, before and after. I built the docs on `main` (`accd97e`) and on my branch `fix/243` (commit `345ee44`) with `python3 -m uv run --frozen sphinx-build -b html docs docs/_build/html -q -E`, then searched the API page with `grep`:
+
+| Check on `power_grid_model_io.html` | Before (`main`) | After (`fix/243`) |
+|---|---|---|
+| ids with a private module path (`._functions.`, `._data_types.`) | 10 | 0 |
+| `power_grid_model_io.functions.has_value` (the issue's example) | missing | present |
+| `StructuredData` | `data_types._data_types.StructuredData` | `data_types.StructuredData` |
+| `TabularData` ids | 1 (`data_types.tabular_data.TabularData`) | 1 (`data_types.TabularData`) |
+| Sphinx warnings and errors | 242 | 234 |
+
+I also compared the warning lists: the fix adds no new warnings. Two existing `both_zeros_to_nan` docstring warnings now point at `functions/__init__.py` instead of `_functions.py`, and 8 are gone, including the `ExtraInfo` and `ExtraInfoLookup` signature errors.
+
+Then I ran every check in my ship manifest on the branch, the way the ship-gate runs them, and all passed (exit code 0): `ruff check` ("All checks passed!"), `ruff format --check` ("119 files already formatted"), `mypy` ("no issues found in 104 source files"), `reuse lint` (compliant), `pytest tests/unit` (894 passed, coverage 98.65% against the required 98%), and the docs build.
+
+Not run: the validation tests (CI runs them, and my change doesn't touch any code), and Read the Docs' Ubuntu build. I only built on Windows, so the Read the Docs preview on the PR is the last check.
 
 **Toolkit**
 
-- Tool:
-- What it produced:
-- Difficulties:
-- What changed:
+- Tool: my repro `grep` commands re-run on both builds, and the ship manifest's checks, run through the ship-gate's own environment code.
+- What it produced: 10 private ids before and 0 after, the issue's example under its public path, and all 7 manifest rows exiting 0. It's saved in `test_evidence.md` in my clone.
+- Difficulties: the raw warning count only told me 242 went to 234. To be sure the fix added no new warnings, I had to compare the two warning lists line by line. Two warnings looked new until I saw they were the same docstring warnings reported against a different file.
+- What changed: I added the warning-list comparison to my evidence, instead of only reporting the count.
 
 ---
 
@@ -237,12 +248,16 @@ built, decisions you made when you made them, wrong turns included.]
 
 Before writing my plan, I tested the cause on a throwaway change and undid it afterwards. Pointing `automodule` at `power_grid_model_io.functions` and `power_grid_model_io.data_types` with `:imported-members:` took the private ids from 10 to 0, but `StructuredData` disappeared from the page (it's a type alias) and `TabularData` showed up twice. #491's exact diff, which also adds `autodata:: ...StructuredData` and drops the `tabular_data` directive, fixed both and lowered Sphinx's warnings from 242 to 234, so I chose it. I also ran all my manifest checks on `main` first: ruff, mypy, reuse, the docs build and 894 unit tests all passed.
 
+**2026-11-08 (build)**
+
+I made branch `fix/243` from upstream `main` (`accd97e`, unchanged since my repro) and changed only `docs/power_grid_model_io.md`, +5 −3, matching my plan and #491's diff. My first commit, `345ee44`, is signed with my SSH key, has a DCO `Signed-off-by` line from `git commit -s`, and has an `Assisted-by: Claude Code` line, as the org's AI policy asks. I used "Relates to #243" in the commit and saved `Closes #243` for the PR description. I haven't pushed yet. There were no deviations from the plan, and the maintainer hasn't answered my scope question, so the extra docs problems stay out.
+
 **Toolkit**
 
-- Tool:
-- What it produced:
-- Difficulties:
-- What changed:
+- Tool: Claude Code, to make the edit, run the before and after builds, and write the commit; my CLAUDE.local.md, for the branch, commit and signing rules.
+- What it produced: a +5 −3 diff to one file and a signed commit with a DCO sign-off.
+- Difficulties: the Windows clone checks files out with CRLF line endings, so I checked that the diff had no stray line-ending changes before committing (it had none).
+- What changed: nothing in the plan. I kept the "Relates to" wording in the commit so the PR description can carry `Closes #243`.
 
 ---
 
@@ -263,12 +278,16 @@ adapts into it]
 status is a fact you record, never a grade: the PR is graded as
 opened.]
 
+**2026-11-08 (build)**
+
+I made branch `fix/243` from upstream `main` (`accd97e`, unchanged since my repro) and changed only `docs/power_grid_model_io.md`, +5 −3, matching my plan and #491's diff. My first commit, `345ee44`, is signed with my SSH key, has a DCO `Signed-off-by` line from `git commit -s`, and has an `Assisted-by: Claude Code` line, as the org's AI policy asks. I used "Relates to #243" in the commit and saved `Closes #243` for the PR description. I haven't pushed yet. There were no deviations from the plan, and the maintainer hasn't answered my scope question, so the extra docs problems stay out.
+
 **Toolkit**
 
-- Tool:
-- What it produced:
-- Difficulties:
-- What changed:
+- Tool: Claude Code, to make the edit, run the before and after builds, and write the commit; my CLAUDE.local.md, for the branch, commit and signing rules.
+- What it produced: a +5 −3 diff to one file and a signed commit with a DCO sign-off.
+- Difficulties: the Windows clone checks files out with CRLF line endings, so I checked that the diff had no stray line-ending changes before committing (it had none).
+- What changed: nothing in the plan. I kept the "Relates to" wording in the commit so the PR description can carry `Closes #243`.
 
 ---
 
