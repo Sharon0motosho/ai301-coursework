@@ -105,26 +105,26 @@ Claim comment: https://github.com/PowerGridModel/power-grid-model-io/issues/243#
 
 **Problem Description**
 
-[In your own words, what is broken or missing?]
+The API reference page documents some public functions and types under the private module where they are written, instead of the public module users import them from. For example, it shows `power_grid_model_io.functions._functions.has_value`, but users call `power_grid_model_io.functions.has_value`. The leading underscore tells readers "don't import from here", so the docs point people at a path they shouldn't use.
 
 **Expected Behavior**
 
-[What should happen?]
+Everything a package exports in its `__init__.py` should appear on the API page under the public path, like `power_grid_model_io.functions.has_value` and `power_grid_model_io.data_types.StructuredData`.
 
 **Current Behavior**
 
-[What actually happens?]
+On `main` (`accd97e`), the built page lists 10 objects under private paths: 9 functions under `functions._functions` and `StructuredData` under `data_types._data_types`.
 
 **Affected Components**
 
-[Which parts of the codebase are involved?]
+Only the docs: `docs/power_grid_model_io.md` (the `data_types` and `functions` blocks, lines 38-47). The public names come from `src/power_grid_model_io/functions/__init__.py` and `src/power_grid_model_io/data_types/__init__.py`, which I read but don't change.
 
 **Toolkit**
 
-- Tool:
-- What it produced:
-- Difficulties:
-- What changed:
+- Tool: my repro build and `grep` on the generated HTML, plus reading the two `__init__.py` files.
+- What it produced: the exact list of 10 affected ids and the two directive lines that produce them.
+- Difficulties: the issue gives only one example, so I had to build the docs to see the full extent.
+- What changed: I wrote the problem around all 10 entries instead of just `has_value`.
 
 ---
 
@@ -176,29 +176,39 @@ id="power_grid_model_io.functions._functions.value_or_zero"
 
 **Analysis**
 
-[Your analysis of the root cause: what is causing the issue, traced
-to the files and functions involved.]
+`docs/power_grid_model_io.md` builds the API page from `.. automodule::` directives. In the `data_types` block, line 39 is `automodule:: power_grid_model_io.data_types._data_types`, and in the `functions` block, line 46 is `automodule:: power_grid_model_io.functions._functions`. Sphinx autodoc names every object after the module it documents, so these two lines produce the private paths. The public modules (`functions/__init__.py`, `data_types/__init__.py`) only import the objects from the private modules and list them in `__all__`, so autodoc never documents them there unless it's told to include imported members.
+
+I confirmed this on 2026-11-08 by changing only those directives in a throwaway build: the private ids went from 10 to 0.
 
 **Proposed Solution**
 
-[High-level description of your fix approach, and what you are
-deliberately NOT changing.]
+Use the same change as PR #491, which a maintainer already said "looks good to go":
+
+- `functions`: replace `automodule:: power_grid_model_io.functions._functions` with `automodule:: power_grid_model_io.functions` plus `:imported-members:`.
+- `data_types`: replace the `_data_types` and `tabular_data` directives with `automodule:: power_grid_model_io.data_types` plus `:imported-members:`, and add `autodata:: power_grid_model_io.data_types.StructuredData`. `StructuredData` is a type alias, and `automodule` skips it without the `autodata` line (I checked: it disappeared from the page). Keeping the `tabular_data` directive would document `TabularData` twice.
+
+What I'm deliberately not changing:
+- The `functions.phase_to_phase` directive, which is already public.
+- Any Python code, `docs/conf.py`, or the other packages' blocks.
+- `functions.filters` not being documented, and the stale `data_stores.csv_file_store` and `utils.regex` entries. These are out of scope for this plan; I asked on the issue on 2026-11-08 whether they belong here or in a separate PR. If the maintainer wants them here, I'll update this plan and grade it again before changing them.
+- The ~230 other Sphinx warnings that already exist on `main`.
+
+What I haven't verified: I've only built the docs on Windows 11 with Python 3.14.7, while Read the Docs builds on Ubuntu 24.04. I expect the same result there because the change is to directives, not to platform-specific code, but the PR's Read the Docs preview will be the real check.
 
 **Implementation Plan**
 
-1. [Modify file X to do Y]
-2. [Add or change Z]
-3. [Update tests]
-
-[Record deviations here as they happen: what changed mid-build and
-why. A recorded deviation is honest work; silent drift is not.]
+1. Create branch `fix/243` from an up-to-date `main`.
+2. In `docs/power_grid_model_io.md`, change the `data_types` and `functions` blocks as described above.
+3. Build the docs and confirm: 0 private ids, `functions.has_value` and `data_types.StructuredData` present, `TabularData` documented once, no more warnings than `main` (242).
+4. Run every check in my ship manifest (ruff, mypy, reuse, unit tests, docs build).
+5. Commit with `git commit -s` (signed, with DCO sign-off) and an `Assisted-by: Claude Code` line.
 
 **Toolkit**
 
-- Tool:
-- What it produced:
-- Difficulties:
-- What changed:
+- Tool: plan-check, grading `plan.md` and my draft plan comment against the issue and my posted reproduction, following my own `procedure.md`.
+- What it produced: reject on the first run, accept on the second. The first run failed `one-bounded-change` on my step 6 ("If the maintainer asks for the extra docs fixes in this PR, add them as a separate commit"), and the preferred `unknowns-stated` check, because I didn't say I'd only built on Windows.
+- Difficulties: the step 6 fail surprised me, because the extra work was only conditional, but my rubric only counts work listed as out of scope as deferred. The voice guide also caught that my comment reported "10 to 0" without pasting the output.
+- What changed: I moved the extra fixes under "not changing", promising to update and regrade the plan if the maintainer wants them, added a "What I haven't verified" line about Windows vs. Read the Docs' Ubuntu build, and pasted real `grep` output into the comment after re-running it.
 
 ---
 
@@ -223,13 +233,9 @@ observable named is not a strategy.]
 [A running log, added to as you work. Date each entry. What you
 built, decisions you made when you made them, wrong turns included.]
 
-**[Date]**
+**2026-11-08**
 
-[Entry]
-
-**[Date]**
-
-[Entry]
+Before writing my plan, I tested the cause on a throwaway change and undid it afterwards. Pointing `automodule` at `power_grid_model_io.functions` and `power_grid_model_io.data_types` with `:imported-members:` took the private ids from 10 to 0, but `StructuredData` disappeared from the page (it's a type alias) and `TabularData` showed up twice. #491's exact diff, which also adds `autodata:: ...StructuredData` and drops the `tabular_data` directive, fixed both and lowered Sphinx's warnings from 242 to 234, so I chose it. I also ran all my manifest checks on `main` first: ruff, mypy, reuse, the docs build and 894 unit tests all passed.
 
 **Toolkit**
 
