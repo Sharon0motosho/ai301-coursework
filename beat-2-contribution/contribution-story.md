@@ -193,6 +193,8 @@ What I'm deliberately not changing:
 - `functions.filters` not being documented, and the stale `data_stores.csv_file_store` and `utils.regex` entries. These are out of scope for this plan; I asked on the issue on 2026-11-08 whether they belong here or in a separate PR. If the maintainer wants them here, I'll update this plan and grade it again before changing them.
 - The ~230 other Sphinx warnings that already exist on `main`.
 
+**Deviation (2026-11-14):** while checking my PR description, I found that dropping the `tabular_data` directive also removes `tabular_data.Closeable` from the page. It isn't in `data_types.__all__`; it's only the type of the private `TabularData._open_readers`, and #491 dropped it the same way and was approved. I kept the change and said so in the PR, with an offer to add an `autoclass` line if the maintainers want it kept.
+
 What I haven't verified: I've only built the docs on Windows 11 with Python 3.14.7, while Read the Docs builds on Ubuntu 24.04. I expect the same result there because the change is to directives, not to platform-specific code, but the PR's Read the Docs preview will be the real check.
 
 **Implementation Plan**
@@ -228,6 +230,8 @@ I also compared the warning lists: the fix adds no new warnings. Two existing `b
 
 Then I ran every check in my ship manifest on the branch, the way the ship-gate runs them, and all passed (exit code 0): `ruff check` ("All checks passed!"), `ruff format --check` ("119 files already formatted"), `mypy` ("no issues found in 104 source files"), `reuse lint` (compliant), `pytest tests/unit` (894 passed, coverage 98.65% against the required 98%), and the docs build.
 
+After rebasing onto `main` `90c56fc` on 2026-11-14 (commit `e7d8062`), I re-ran everything: private ids 10 to 0, warnings 239 to 231 with none new, and all manifest checks exit 0. I also compared every `data_types` id before and after, which showed `Closeable` leaving the page (see the deviation under Solution Approach).
+
 Not run: the validation tests (CI runs them, and my change doesn't touch any code), and Read the Docs' Ubuntu build. I only built on Windows, so the Read the Docs preview on the PR is the last check.
 
 **Toolkit**
@@ -251,6 +255,14 @@ Before writing my plan, I tested the cause on a throwaway change and undid it af
 **2026-11-08 (build)**
 
 I made branch `fix/243` from upstream `main` (`accd97e`, unchanged since my repro) and changed only `docs/power_grid_model_io.md`, +5 −3, matching my plan and #491's diff. My first commit, `345ee44`, is signed with my SSH key, has a DCO `Signed-off-by` line from `git commit -s`, and has an `Assisted-by: Claude Code` line, as the org's AI policy asks. I used "Relates to #243" in the commit and saved `Closes #243` for the PR description. I haven't pushed yet. There were no deviations from the plan, and the maintainer hasn't answered my scope question, so the extra docs problems stay out.
+
+**2026-11-14 (rebase and PR prep)**
+
+The maintainer hadn't replied after five days, though they were active on other PRs, so I decided to open the PR and repeat the scope question there instead of nudging. Upstream had merged #538 (docs links) and #536 (dependency bumps), so I rebased `fix/243` onto `main` `90c56fc`. The rebased commit is `e7d8062`, still signed. I then redid all my evidence on the new base: private ids 10 to 0, warnings 239 to 231 with none new, and all 7 manifest checks pass. While writing the PR description I caught my own wrong claim, that `LazyDataFrame` was "now documented" (it never was; it's a type alias). Comparing every `data_types` id before and after showed that `Closeable` drops off the page. I recorded that as a deviation in my plan and disclosed it in the PR.
+
+**2026-11-14 (ship-gate and AI policy question)**
+
+My first ship-gate run passed all 7 repo checks, but my pr-precheck rejected the branch. Three of its fails came from my local `main` still being at `accd97e`, so the gate counted upstream's lockfile and workflow bumps as my diff. I moved local `main` up to `upstream/main`, and the diff went back to one file. The fourth fail was real: the org's AI policy says "If you plan to use an AI agent, discuss this with the maintainers first," and a "coding assistant, not an autonomous agent" line in my description wasn't enough. I chose not to loosen my rubric. Instead I asked the maintainers on the issue whether my use of Claude Code counts as AI-assisted coding or as an AI agent, and I'll open the PR after they answer: https://github.com/PowerGridModel/power-grid-model-io/issues/243#issuecomment-6874425185
 
 **Toolkit**
 
@@ -278,16 +290,12 @@ adapts into it]
 status is a fact you record, never a grade: the PR is graded as
 opened.]
 
-**2026-11-08 (build)**
-
-I made branch `fix/243` from upstream `main` (`accd97e`, unchanged since my repro) and changed only `docs/power_grid_model_io.md`, +5 −3, matching my plan and #491's diff. My first commit, `345ee44`, is signed with my SSH key, has a DCO `Signed-off-by` line from `git commit -s`, and has an `Assisted-by: Claude Code` line, as the org's AI policy asks. I used "Relates to #243" in the commit and saved `Closes #243` for the PR description. I haven't pushed yet. There were no deviations from the plan, and the maintainer hasn't answered my scope question, so the extra docs problems stay out.
-
 **Toolkit**
 
-- Tool: Claude Code, to make the edit, run the before and after builds, and write the commit; my CLAUDE.local.md, for the branch, commit and signing rules.
-- What it produced: a +5 −3 diff to one file and a signed commit with a DCO sign-off.
-- Difficulties: the Windows clone checks files out with CRLF line endings, so I checked that the diff had no stray line-ending changes before committing (it had none).
-- What changed: nothing in the plan. I kept the "Relates to" wording in the commit so the PR description can carry `Closes #243`.
+- Tool:
+- What it produced:
+- Difficulties:
+- What changed:
 
 ---
 
