@@ -243,9 +243,6 @@ Not run: the validation tests (CI runs them, and my change doesn't touch any cod
 
 ## Implementation Notes
 
-[A running log, added to as you work. Date each entry. What you
-built, decisions you made when you made them, wrong turns included.]
-
 **2026-11-08**
 
 Before writing my plan, I tested the cause on a throwaway change and undid it afterwards. Pointing `automodule` at `power_grid_model_io.functions` and `power_grid_model_io.data_types` with `:imported-members:` took the private ids from 10 to 0, but `StructuredData` disappeared from the page (it's a type alias) and `TabularData` showed up twice. #491's exact diff, which also adds `autodata:: ...StructuredData` and drops the `tabular_data` directive, fixed both and lowered Sphinx's warnings from 242 to 234, so I chose it. I also ran all my manifest checks on `main` first: ruff, mypy, reuse, the docs build and 894 unit tests all passed.
@@ -297,25 +294,23 @@ My first ship-gate run passed all 7 repo checks, but my pr-precheck rejected the
 
 **Technical Skills Gained**
 
-[What you learned technically, named concretely.]
+I learned how Sphinx autodoc decides which path to show: it names each object after the module the `automodule` directive points at, so pointing it at a private module like `functions._functions` puts that private path in the docs. `:imported-members:` makes it document what a package's `__init__.py` imports, but it still skips type aliases like `StructuredData`, which need their own `autodata` line. I also learned to set up SSH commit signing and DCO sign-offs (`git commit -s`), to work with a fork that has both `origin` and `upstream` remotes, to rebase a branch onto an updated `upstream/main`, and to install and run a project with `uv`, following the repo's own `.readthedocs.yaml` and CI files.
 
 **Challenges Overcome**
 
-[What was hard and how you solved it; point at the real events, the
-Toolkit blocks above are full of them.]
+The biggest surprise was that the same Windows bug broke three course tools: the voice guard, the ship-gate and the PR monitor all called `claude` in a way Windows can't run, so each one said it wasn't installed when it was. I fixed all three with the same one-line change. My first ship-gate run rejected my branch because my local `main` was out of date, so my pr-precheck thought upstream's lockfile changes were mine. The hardest call was the AI policy: my own check stopped me on the line about AI agents, and instead of changing my rubric to pass, I asked the maintainers on #243. They answered, and I followed their answer in my PR. I also caught two of my own mistakes before the PR went out, a wrong claim about `LazyDataFrame` and the `Closeable` class dropping off the page, by comparing every docs entry before and after instead of only the counts.
 
 **What I'd Do Differently Next Time**
 
-[Reflection on your process.]
+I'd read every linked PR before trusting my scout's verdict, because #491 told me more about this issue than the scout did, including the signed-commit rule that got it closed. I'd sync my local `main` with upstream before running any checks, and set up commit signing on day one instead of waiting until I needed it. I'd also compare full before and after outputs from the start, not just totals, since that's what found the `Closeable` change. Finally, I'd run Claude Code from inside the project folder from the beginning, because the hooks only see the folder the session starts in.
 
 ---
 
 ## Resources Used
 
-[What actually helped, not a reading list. List things this story
-already shows you using: the doc you followed to set the environment
-up, the thread that explained the bug, the person who answered you.
-One real entry beats ten plausible ones.]
-
-- [Link to documentation that helped]
-- [Discussion, issue, or post that helped]
+- PR #491, the earlier attempt at this fix, and its diff: https://github.com/PowerGridModel/power-grid-model-io/pull/491. It showed me the approach and why it was closed (unsigned commits).
+- The PowerGridModel org's CONTRIBUTING.md (signed commits, DCO, branch names, labels, AI policy): https://github.com/PowerGridModel/.github/blob/main/CONTRIBUTING.md
+- nitbharambe's answer to my AI-policy question on #243: https://github.com/PowerGridModel/power-grid-model-io/issues/243#issuecomment-6923232695
+- GitHub's docs on signing commits with an SSH key: https://docs.github.com/en/authentication/managing-commit-signature-verification
+- The repo's `.readthedocs.yaml` and `.github/workflows/check-code-quality.yml`, which gave me the exact build and check commands for my manifest.
+- mgovers, who added the `documentation` label and assigned me on #541 two minutes after I asked in my comment: https://github.com/PowerGridModel/power-grid-model-io/pull/541#issuecomment-6925280434
