@@ -294,15 +294,29 @@ My first ship-gate run passed all 7 repo checks, but my pr-precheck rejected the
 
 **Technical Skills Gained**
 
-I learned how Sphinx autodoc decides which path to show: it names each object after the module the `automodule` directive points at, so pointing it at a private module like `functions._functions` puts that private path in the docs. `:imported-members:` makes it document what a package's `__init__.py` imports, but it still skips type aliases like `StructuredData`, which need their own `autodata` line. I also learned to set up SSH commit signing and DCO sign-offs (`git commit -s`), to work with a fork that has both `origin` and `upstream` remotes, to rebase a branch onto an updated `upstream/main`, and to install and run a project with `uv`, following the repo's own `.readthedocs.yaml` and CI files.
+Working on this issue helped me understand how Sphinx autodoc works and how it generates API documentation. I learned that the module path used in the `automodule` directive affects how objects appear in the documentation. I also learned how `:imported-members:` can be used to document objects imported through a package's `__init__.py`, and why type aliases like `StructuredData` need a separate `autodata` directive.
+
+I also got more familiar with Git and the process of contributing to an open-source project. I learned how to sign commits using SSH, add DCO sign-offs, work with fork and upstream remotes, and rebase my branch when the main repository gets updated. I also gained more experience using `uv` to install dependencies and run project checks.
 
 **Challenges Overcome**
 
-The biggest surprise was that the same Windows bug broke three course tools: the voice guard, the ship-gate and the PR monitor all called `claude` in a way Windows can't run, so each one said it wasn't installed when it was. I fixed all three with the same one-line change. My first ship-gate run rejected my branch because my local `main` was out of date, so my pr-precheck thought upstream's lockfile changes were mine. The hardest call was the AI policy: my own check stopped me on the line about AI agents, and instead of changing my rubric to pass, I asked the maintainers on #243. They answered, and I followed their answer in my PR. I also caught two of my own mistakes before the PR went out, a wrong claim about `LazyDataFrame` and the `Closeable` class dropping off the page, by comparing every docs entry before and after instead of only the counts.
+One of the biggest challenges I faced was getting my tools to work properly on Windows. I had the same issue with three different tools: the voice guard, ship-gate, and PR monitor. They couldn't find Claude even though it was installed because they weren't handling `claude.cmd` correctly. I had to look into the problem and make changes to how each tool located Claude.
+
+Another issue was my local `main` branch being behind the upstream repository. This caused the ship-gate to think that changes made by other contributors were part of my own changes. I had to update my branch and rerun the checks.
+
+I also had to deal with the repository's AI policy. I wasn't sure whether my use of Claude Code would be considered AI-assisted coding or using an AI agent. Instead of changing my checks just to get them to pass, I asked the maintainers for clarification and followed their response.
+
+I also caught a couple of mistakes in my own work before opening the PR. I initially described `LazyDataFrame` as being documented when it wasn't, and later noticed that `Closeable` was no longer appearing in the documentation after my changes. These were things I might have missed if I had only looked at the warning count instead of comparing the actual documentation before and after.
 
 **What I'd Do Differently Next Time**
 
-I'd read every linked PR before trusting my scout's verdict, because #491 told me more about this issue than the scout did, including the signed-commit rule that got it closed. I'd sync my local `main` with upstream before running any checks, and set up commit signing on day one instead of waiting until I needed it. I'd also compare full before and after outputs from the start, not just totals, since that's what found the `Closeable` change. Finally, I'd run Claude Code from inside the project folder from the beginning, because the hooks only see the folder the session starts in.
+If I were doing this again, I would read through the issue discussion and any previous PRs before relying on my issue scout. Looking at PR #491 helped me understand the issue better and also showed me the importance of signed commits.
+
+I would also make sure my local `main` branch is updated before running checks so I don't end up dealing with issues caused by an outdated branch. I would set up commit signing earlier instead of waiting until I needed to make my first commit.
+
+Another thing I would change is how I compare my results. I would compare the full output before and after making changes instead of only looking at the number of warnings. This would have helped me catch issues like `Closeable` earlier. Finally, I would make sure to start Claude Code from inside my project folder because some of my tools depended on the directory where the session was started.
+
+Overall, this contribution taught me that fixing an issue is only one part of contributing to an open-source project. There is also a lot of reading, testing, checking guidelines, and making sure that the changes I introduce don't create other problems.
 
 ---
 
