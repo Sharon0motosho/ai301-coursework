@@ -15,7 +15,7 @@ files and no evidence uploads are part of Assignment 5.
 
 **Issue:** https://github.com/PowerGridModel/power-grid-model-io/issues/243
 
-**Pull Request:** [GitHub PR link, once opened]
+**Pull Request:** https://github.com/PowerGridModel/power-grid-model-io/pull/541
 
 One repository, built across units 5 to 8, telling the whole story of your real
 contribution. Fill it as you work, not at the end — the sections below ask for evidence that
@@ -66,10 +66,9 @@ I built a fit profile, created search queries, and worked on ranking rules to he
 
 I added an Upstream section to my voice guide with four rules: read the thread and linked PRs before claiming, name a first step and a report-back day, ask one question with what I already checked, and nudge only once after 7 quiet days. On Windows the guard stopped every post with "claude CLI is not on PATH" even though Claude was installed, because Python's `subprocess` can't launch `claude.cmd` by its short name; I changed one line in `check_voice.py` to look up the full path with `shutil.which`, and after that it passed my claim through the hook (guard log, 2026-11-08 22:21). On my report-back comment it stopped me three times: twice fairly (I summarized output instead of pasting it, and stated a cause I hadn't shown), and once wrongly, when my claims rule fired on a plain status line, so I reworded the line instead of promising a date I hadn't picked. For my repo memory file, I wrote a 50-line `CLAUDE.local.md` in my clone and kept it out of git with `.git/info/exclude`; the hardest part was that the rules live in the org's `.github` repo, not this one, and the template asks for commands copied working, so I ran every check on `main` first (ruff, mypy, reuse and 894 unit tests all passed) and wrote down that `uv` only runs as `python3 -m uv` on my machine.
 
-**Unit 11: [one line on the tool work]**
+**Unit 11: Ship-gate and manifest on a real branch, and four stops before PR #541 opened**
 
-[2-4 sentences: the ship-gate and your gate manifest. What it produced
-on your real branch, what fought you, what changed because of it.]
+My manifest holds 7 checks taken from the repo's CI files and pre-commit config (uv sync, ruff check, ruff format --check, mypy, reuse, unit tests, docs build), with the two validation suites excluded and a dated reason for each; all 7 passed on `main` before I changed anything. The gate's `check_gate.py` had the same Windows `claude.cmd` bug as my voice guard, so I patched it the same way. My first gate run rejected `fix/243` on three checks because my local `main` was still at `accd97e`, so pr-precheck counted upstream's lockfile and workflow bumps as my diff; moving `main` up to `upstream/main` fixed it. The fourth fail was real: the org's policy says to discuss AI agents first, and instead of loosening my rubric I asked on #243 and cited the maintainer's answer in the PR. Later runs caught stale evidence and a missing `TabularData` proof, the gate crashed printing a `−` character on Windows, and the hook only worked when Claude Code started inside the clone. After those fixes it passed and let #541 through on 2026-11-16.
 
 **Unit 12: [one line on the tool work]**
 
@@ -275,27 +274,23 @@ My first ship-gate run passed all 7 repo checks, but my pr-precheck rejected the
 
 ## Pull Request
 
-**PR Link:** [GitHub PR URL when opened]
+**PR Link:** https://github.com/PowerGridModel/power-grid-model-io/pull/541
 
-**PR Description:** [what the PR says; much of the content above
-adapts into it]
+**PR Description:** Title "Document public module paths in the API reference", opening with `Fixes #243`, on the org's PR template. It says the PR changes only `docs/power_grid_model_io.md` (+5 -3): `functions` and `data_types` now use `automodule` on the public package with `:imported-members:`, plus `autodata` for the `StructuredData` type alias, the same change as #491. It pastes the before and after output (private ids 10 to 0, `TabularData` documented once, warnings 239 to 231 with none new) and the passing checks, says what I didn't run, and points reviewers to `StructuredData`, the dropped `Closeable` (with a link to #491's diff), and the out-of-scope `filters` / `csv_file_store` / `utils.regex` problems, offering to fix those here or separately. It discloses that Claude Code ran the builds and checks, made the commit and drafted the description, and links nitbharambe's AI-policy answer.
 
 **Maintainer Feedback:**
 
-- [Date]: [feedback received, or "none yet"; silence is a normal
-  state and costs you nothing]
-- [Date]: [how you addressed it]
+- 2026-11-16: I couldn't add a label or assign myself (`gh pr edit` failed with "does not have the correct permissions"), so I asked in a PR comment. mgovers assigned me and added `documentation` two minutes later, without a written reply. All 33 CI checks that ran passed, including the Read the Docs build. No review yet.
+- 2026-11-16: nothing to address yet; waiting for review.
 
-**Status:** [Awaiting review / Iterating / Merged / Closed. The
-status is a fact you record, never a grade: the PR is graded as
-opened.]
+**Status:** Awaiting review
 
 **Toolkit**
 
-- Tool:
-- What it produced:
-- Difficulties:
-- What changed:
+- Tool: the ship-gate, run by hand with `check_gate.py --branch` while I fixed things, then as the hook on `gh pr create` from inside my clone.
+- What it produced: four stops, then PASS. The hook run that opened #541 passed all 7 manifest checks and all 10 pr-precheck checks (gate log, 2026-11-16 13:21).
+- Difficulties: a stale local `main` made three checks fail for reasons that weren't mine. A Windows console crash on the `−` character in "+5 −3" hid the verdict. The hook read the folder my Claude session started in (my course repo, on `main`), not the folder I `cd`'d into, so it kept stopping until I ran `claude` from the clone. And the AI-agent check stopped me on a real policy question.
+- What changed: I keep local `main` synced to `upstream/main` before gating, use plain ASCII in PR text, open PRs from a Claude session started in the clone, and took the AI question to the maintainers instead of editing my rubric to pass.
 
 ---
 
