@@ -70,10 +70,9 @@ I added an Upstream section to my voice guide with four rules: read the thread a
 
 My manifest holds 7 checks taken from the repo's CI files and pre-commit config (uv sync, ruff check, ruff format --check, mypy, reuse, unit tests, docs build), with the two validation suites excluded and a dated reason for each; all 7 passed on `main` before I changed anything. The gate's `check_gate.py` had the same Windows `claude.cmd` bug as my voice guard, so I patched it the same way. My first gate run rejected `fix/243` on three checks because my local `main` was still at `accd97e`, so pr-precheck counted upstream's lockfile and workflow bumps as my diff; moving `main` up to `upstream/main` fixed it. The fourth fail was real: the org's policy says to discuss AI agents first, and instead of loosening my rubric I asked on #243 and cited the maintainer's answer in the PR. Later runs caught stale evidence and a missing `TabularData` proof, the gate crashed printing a `−` character on Windows, and the hook only worked when Claude Code started inside the clone. After those fixes it passed and let #541 through on 2026-11-16.
 
-**Unit 12: [one line on the tool work]**
+**Unit 12: PR monitor on #541, a playbook built from the repo's real reply times, and a wait note I didn't send**
 
-[2-4 sentences: the PR-monitor and your playbook. What it read, what it
-drafted, what you did with the draft.]
+I installed the PR monitor (patching the same Windows `claude.cmd` bug on line 830 of `monitor.py`) and wrote my playbook from this repo's data: the last five merged PRs from outside contributors got a first maintainer response after 0.1, 1.1, 1.5, 3.9 and 4.9 days, so I nudge after 7 quiet days before a first review and 10 after I've answered one, tag only the reviewer (or mgovers, who opened #243), and walk away 30 days after one unanswered nudge. On 2026-11-16 the monitor read #541 as QUIET, with 33 checks passing and review required, and drafted a wait note rather than a nudge: the 7 days run out around 2026-11-23, so I posted nothing. It misread one rule, saying any maintainer reply would switch me to the 10-day rule, when my playbook uses 10 days only after I've answered a review; I'm keeping my wording and will read its next draft against that rule.
 
 ---
 
