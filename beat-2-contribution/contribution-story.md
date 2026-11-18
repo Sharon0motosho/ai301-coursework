@@ -187,11 +187,22 @@ Use the same change as PR #491, which a maintainer already said "looks good to g
 
 What I'm deliberately not changing:
 - The `functions.phase_to_phase` directive, which is already public.
-- Any Python code, `docs/conf.py`, or the other packages' blocks.
+- Any Python code, `docs/conf.py`, or the other packages' blocks. (Changed by the 2026-11-17 revision below: `docs/conf.py` now gets a small hook.)
 - `functions.filters` not being documented, and the stale `data_stores.csv_file_store` and `utils.regex` entries. These are out of scope for this plan; I asked on the issue on 2026-11-08 whether they belong here or in a separate PR. If the maintainer wants them here, I'll update this plan and grade it again before changing them.
 - The ~230 other Sphinx warnings that already exist on `main`.
 
 **Deviation (2026-11-14):** while checking my PR description, I found that dropping the `tabular_data` directive also removes `tabular_data.Closeable` from the page. It isn't in `data_types.__all__`; it's only the type of the private `TabularData._open_readers`, and #491 dropped it the same way and was approved. I kept the change and said so in the PR, with an offer to add an `autoclass` line if the maintainers want it kept.
+
+**Revision after review (2026-11-17):** mgovers reviewed PR #541 and wrote, on the `data_types` block, "a lot of important documentation gets lost here. The intention of the original issue is to keep these details while also referencing to the parent `power_grid_model_io.data_types`." I rebuilt both versions and compared the rendered text, not just ids and counts. With my change, `StructuredData` shows Python's generic "Represent a union type / E.g. for int | str" instead of its own description and example, and `Closeable` and the `tabular_data` module description are gone. Five of the 8 warnings that "disappeared" were `StructuredData`'s own docstring, which simply wasn't rendered any more, so "fewer warnings" was a symptom, not an improvement.
+
+Cause: `StructuredData`'s docstring is a string literal under the assignment in `data_types/_data_types.py`. Sphinx's `DataDocumenter.get_doc` looks for that kind of docstring only in the module the entry is documented under (`ModuleAnalyzer.for_module(self.modname)`), here the public `power_grid_model_io.data_types`, finds none, and falls back to the `Union` object's own `__doc__`. No directive alone can show the public path and keep that docstring.
+
+Revised solution, tested on a throwaway build on 2026-11-17:
+- `docs/power_grid_model_io.md`: keep the public `data_types` directive with `:imported-members:` and the `autodata` line for `StructuredData`, and bring back `automodule:: power_grid_model_io.data_types.tabular_data` with `:exclude-members: TabularData`. That restores the module description and `Closeable`, and keeps `TabularData` documented once under `data_types`.
+- `docs/conf.py`: add an `autodoc-process-docstring` hook. For a module-level data entry whose own module has no docstring for it, it looks up the docstring in the submodule that defines the same object (for `StructuredData`, `data_types._data_types`).
+- In that test, the `data_types` and `functions` sections had exactly the same words as `main` with only the private paths renamed, 0 private ids, and no new warnings (the 5 `StructuredData` docstring warnings come back, now reported against `__init__.py`; the 2 `ExtraInfo` signature errors stay gone). One visible difference: `StructuredData` now comes after `TabularData` instead of first.
+- Still not changing: any Python code, the other packages' blocks, `functions.filters`, and the stale `csv_file_store` / `utils.regex` entries.
+- If the maintainers would rather not have a hook in `conf.py`, the other way I can see is a code change, documenting `StructuredData` in `data_types/__init__.py`. That duplicates the docstring, so I'd offer it in my reply rather than build it unasked.
 
 What I haven't verified: I've only built the docs on Windows 11 with Python 3.14.7, while Read the Docs builds on Ubuntu 24.04. I expect the same result there because the change is to directives, not to platform-specific code, but the PR's Read the Docs preview will be the real check.
 
@@ -202,6 +213,14 @@ What I haven't verified: I've only built the docs on Windows 11 with Python 3.14
 3. Build the docs and confirm: 0 private ids, `functions.has_value` and `data_types.StructuredData` present, `TabularData` documented once, no more warnings than `main` (242).
 4. Run every check in my ship manifest (ruff, mypy, reuse, unit tests, docs build).
 5. Commit with `git commit -s` (signed, with DCO sign-off) and an `Assisted-by: Claude Code` line.
+
+Revision steps after mgovers's review (2026-11-17), on the same branch `fix/243`:
+
+6. In `docs/power_grid_model_io.md`, add back `automodule:: power_grid_model_io.data_types.tabular_data` with `:exclude-members: TabularData` after the `StructuredData` line.
+7. In `docs/conf.py`, add the `autodoc-process-docstring` hook described above, with a short comment saying why it exists.
+8. Build `main` and the branch, and compare the rendered text of the whole API page, not only `data_types`. Expected: 0 private ids; `data_types.StructuredData` shows "Structured data is a multi dimensional structure ..." and not "Represent a union type"; `Closeable` and the `tabular_data` description present; `TabularData` once; every other section unchanged; no new warnings.
+9. Run every check in my ship manifest, then commit (signed, `-s`, `Assisted-by: Claude Code`) and push to the same PR.
+10. Reply once on the review: what changed and why, the before/after text, and the `conf.py` alternative, after the voice guard checks it.
 
 **Toolkit**
 
@@ -258,6 +277,10 @@ The maintainer hadn't replied after five days, though they were active on other 
 **2026-11-14 (ship-gate and AI policy question)**
 
 My first ship-gate run passed all 7 repo checks, but my pr-precheck rejected the branch. Three of its fails came from my local `main` still being at `accd97e`, so the gate counted upstream's lockfile and workflow bumps as my diff. I moved local `main` up to `upstream/main`, and the diff went back to one file. The fourth fail was real: the org's AI policy says "If you plan to use an AI agent, discuss this with the maintainers first," and a "coding assistant, not an autonomous agent" line in my description wasn't enough. I chose not to loosen my rubric. Instead I asked the maintainers on the issue whether my use of Claude Code counts as AI-assisted coding or as an AI agent, and I'll open the PR after they answer: https://github.com/PowerGridModel/power-grid-model-io/issues/243#issuecomment-6874425185
+
+**2026-11-17 (review and revised plan)**
+
+mgovers reviewed PR #541: my change loses documentation, and that loss is why the issue stayed open. I checked by comparing the rendered text of the `data_types` section, which I hadn't done before. `StructuredData` showed "Represent a union type" instead of its own docstring, and `Closeable` and the `tabular_data` description were gone. Five of my "8 fewer warnings" were that lost docstring. I tested three variants on throwaway builds. Only one restored everything: keeping the `tabular_data` directive minus `TabularData`, plus a docstring hook in `docs/conf.py`. Its `data_types` and `functions` text matched `main` word for word apart from the renamed paths. I recorded it as a revision in my plan, and plan-check accepted the revised plan and my draft reply. The voice guard stopped the draft once, for stating "same words as main" without output, so I pasted the comparison output instead.
 
 **Toolkit**
 
